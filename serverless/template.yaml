@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  ContactHub - Serverless Architecture (Module 5)
+  AWS SAM Template deploying HTTP API Gateway, AWS Lambda Functions, and S3 Storage
+
+Globals:
+  Function:
+    Timeout: 10
+    MemorySize: 128
+    Runtime: python3.12
+    Architectures:
+      - x86_64
+    Environment:
+      Variables:
+        STAGE: prod
+        APP_NAME: ContactHub
+
+Resources:
+  # HTTP API Gateway (v2) for low latency and cost efficiency
+  ContactHubHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Authorization
+        AllowOrigins:
+          - '*'
+
+  # Function A: Contact Summary Function
+  ContactSummaryFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: lambda_function.lambda_handler
+      Description: Generates high-level statistical summaries of contact metrics
+      Events:
+        GetSummary:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ContactHubHttpApi
+            Path: /api/summary
+            Method: GET
+
+  # Function B: Contact Export Function
+  ContactExportFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: contact_export_function.lambda_handler
+      Description: Validates export requests and prepares secure S3 pre-signed URLs
+      Policies:
+        - S3WritePolicy:
+            BucketName: !Ref ContactExportBucket
+      Events:
+        PostExport:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref ContactHubHttpApi
+            Path: /api/export
+            Method: POST
+
+  # S3 Bucket for Storing Asynchronous CSV Exports
+  ContactExportBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub 'contacthub-exports-${AWS::AccountId}-${AWS::Region}'
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: AutoDeleteOldExportsAfter7Days
+            Status: Enabled
+            ExpirationInDays: 7
+
+Outputs:
+  HttpApiUrl:
+    Description: HTTP API Gateway base endpoint URL
+    Value: !Sub 'https://${ContactHubHttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+  SummaryApiEndpoint:
+    Description: Summary endpoint
+    Value: !Sub 'https://${ContactHubHttpApi}.execute-api.${AWS::Region}.amazonaws.com/api/summary'
+  ExportApiEndpoint:
+    Description: Export request endpoint
+    Value: !Sub 'https://${ContactHubHttpApi}.execute-api.${AWS::Region}.amazonaws.com/api/export'
+  ExportBucketName:
+    Description: S3 Bucket Name for exported files
+    Value: !Ref ContactExportBucket

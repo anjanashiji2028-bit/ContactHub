@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block title %}Contacts Directory — ContactHub{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header with Breadcrumbs & Action -->
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-4">
+        <div>
+            <h2 class="fw-bold text-navy mb-0">Contacts Directory</h2>
+            <p class="text-muted small mb-0">Total of {{ total_items }} contacts found in your vault</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('add_contact') }}" class="btn btn-teal shadow-sm d-flex align-items-center gap-1">
+                <i class="bi bi-person-plus-fill"></i>
+                <span>Add Contact</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Search & Filter Controls Card -->
+    <div class="card p-3 p-md-4 mb-4">
+        <form method="GET" action="{{ url_for('contacts') }}" class="row g-2 align-items-center">
+            <!-- Search Input -->
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0" name="q" value="{{ search_query }}" placeholder="Search by name, phone, email, company, city...">
+                </div>
+            </div>
+
+            <!-- Category Filter Dropdown -->
+            <div class="col-sm-6 col-md-3">
+                <select class="form-select" name="category" onchange="this.form.submit()">
+                    <option value="" {% if not category_filter %}selected{% endif %}>All Categories</option>
+                    <option value="Personal" {% if category_filter == 'Personal' %}selected{% endif %}>Personal</option>
+                    <option value="Work" {% if category_filter == 'Work' %}selected{% endif %}>Work</option>
+                    <option value="Family" {% if category_filter == 'Family' %}selected{% endif %}>Family</option>
+                    <option value="Friends" {% if category_filter == 'Friends' %}selected{% endif %}>Friends</option>
+                    <option value="Other" {% if category_filter == 'Other' %}selected{% endif %}>Other</option>
+                </select>
+            </div>
+
+            <!-- Sort By Dropdown -->
+            <div class="col-sm-6 col-md-2">
+                <select class="form-select" name="sort" onchange="this.form.submit()">
+                    <option value="name_asc" {% if sort_by == 'name_asc' %}selected{% endif %}>Name (A-Z)</option>
+                    <option value="name_desc" {% if sort_by == 'name_desc' %}selected{% endif %}>Name (Z-A)</option>
+                    <option value="date_desc" {% if sort_by == 'date_desc' %}selected{% endif %}>Newest First</option>
+                    <option value="date_asc" {% if sort_by == 'date_asc' %}selected{% endif %}>Oldest First</option>
+                </select>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-teal w-100">
+                    <i class="bi bi-filter"></i> Filter
+                </button>
+                {% if search_query or category_filter or favorite_filter or sort_by != 'name_asc' %}
+                <a href="{{ url_for('contacts') }}" class="btn btn-outline-secondary" title="Reset Filters">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Favorite Filter Checkbox -->
+            <div class="col-12 mt-2 d-flex align-items-center gap-3">
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" role="switch" id="favoriteSwitch" name="favorite" value="1" {% if favorite_filter == '1' %}checked{% endif %} onchange="this.form.submit()">
+                    <label class="form-check-label small fw-semibold text-secondary" for="favoriteSwitch">
+                        <i class="bi bi-star-fill text-warning me-1"></i>Show Favorites Only
+                    </label>
+                </div>
+
+                <!-- Category Quick Pills -->
+                <div class="d-none d-lg-flex align-items-center gap-1 ms-auto very-small">
+                    <span class="text-muted me-1">Filter:</span>
+                    <a href="{{ url_for('contacts', sort=sort_by) }}" class="badge {% if not category_filter %}bg-navy text-white{% else %}bg-light text-secondary border{% endif %} text-decoration-none">All</a>
+                    <a href="{{ url_for('contacts', category='Work', sort=sort_by) }}" class="badge {% if category_filter == 'Work' %}bg-info text-white{% else %}bg-light text-secondary border{% endif %} text-decoration-none">Work</a>
+                    <a href="{{ url_for('contacts', category='Personal', sort=sort_by) }}" class="badge {% if category_filter == 'Personal' %}bg-success text-white{% else %}bg-light text-secondary border{% endif %} text-decoration-none">Personal</a>
+                    <a href="{{ url_for('contacts', category='Family', sort=sort_by) }}" class="badge {% if category_filter == 'Family' %}bg-danger text-white{% else %}bg-light text-secondary border{% endif %} text-decoration-none">Family</a>
+                    <a href="{{ url_for('contacts', category='Friends', sort=sort_by) }}" class="badge {% if category_filter == 'Friends' %}bg-warning text-dark{% else %}bg-light text-secondary border{% endif %} text-decoration-none">Friends</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Contact Cards Grid -->
+    {% if contacts %}
+    <div class="row g-3 mb-4">
+        {% for c in contacts %}
+        <div class="col-md-6 col-xl-4">
+            <div class="card h-100 p-3 contact-item-card position-relative bg-white">
+                <!-- Card Header: Avatar, Name, Favorite Star -->
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar-circle" style="background-color: {{ c.full_name|avatar_color }};">
+                            {{ c.full_name|initials }}
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-navy mb-0">
+                                <a href="{{ url_for('contact_detail', contact_id=c.id) }}" class="text-decoration-none text-navy">
+                                    {{ c.full_name }}
+                                </a>
+                            </h6>
+                            <span class="badge badge-category badge-{{ c.category }} mt-1">{{ c.category }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Favorite Star Button Form -->
+                    <form action="{{ url_for('toggle_favorite', contact_id=c.id) }}" method="POST" class="favorite-toggle-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn-favorite-toggle {% if c.is_favorite == 1 %}is-favorite{% endif %}" title="{% if c.is_favorite == 1 %}Remove from Favorites{% else %}Mark as Favorite{% endif %}">
+                            <i class="bi {% if c.is_favorite == 1 %}bi-star-fill text-warning{% else %}bi-star{% endif %}"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Contact Info Details -->
+                <div class="small d-flex flex-column gap-2 mb-3 text-muted">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-telephone-fill text-teal"></i>
+                        <span class="text-dark fw-semibold">{{ c.phone }}</span>
+                        {% if c.secondary_phone %}
+                            <span class="very-small text-muted" title="Secondary Phone">({{ c.secondary_phone }})</span>
+                        {% endif %}
+                    </div>
+
+                    {% if c.email %}
+                    <div class="d-flex align-items-center gap-2 text-truncate">
+                        <i class="bi bi-envelope-fill text-secondary"></i>
+                        <span class="text-truncate">{{ c.email }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if c.company or c.job_title %}
+                    <div class="d-flex align-items-center gap-2 text-truncate">
+                        <i class="bi bi-building text-secondary"></i>
+                        <span class="text-truncate">
+                            {% if c.company %}{{ c.company }}{% endif %}
+                            {% if c.company and c.job_title %}&bull;{% endif %}
+                            {% if c.job_title %}<span class="text-muted">{{ c.job_title }}</span>{% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if c.city %}
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-geo-alt-fill text-danger"></i>
+                        <span>{{ c.city }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Card Footer Actions -->
+                <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('contact_detail', contact_id=c.id) }}" class="btn btn-sm btn-outline-teal d-flex align-items-center gap-1">
+                        <i class="bi bi-info-circle"></i> Details
+                    </a>
+                    <div class="d-flex gap-1">
+                        <a href="{{ url_for('edit_contact', contact_id=c.id) }}" class="btn btn-sm btn-light border" title="Edit Contact">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <button type="button" class="btn btn-sm btn-light border text-danger" title="Delete Contact" data-bs-toggle="modal" data-bs-target="#deleteModal{{ c.id }}">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Delete Confirmation Modal for Contact -->
+                <div class="modal fade" id="deleteModal{{ c.id }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ c.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header border-0 pb-0">
+                                <h5 class="modal-title text-danger fw-bold" id="deleteModalLabel{{ c.id }}">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Confirm Deletion
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body py-3">
+                                Are you sure you want to permanently delete <strong>{{ c.full_name }}</strong>? This action cannot be undone.
+                            </div>
+                            <div class="modal-footer border-0 pt-0">
+                                <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                <form action="{{ url_for('delete_contact', contact_id=c.id) }}" method="POST">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-danger btn-sm">Yes, Delete Contact</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination Controls -->
+    {% if total_pages > 1 %}
+    <nav aria-label="Page navigation" class="d-flex justify-content-center mt-4">
+        <ul class="pagination pagination-sm shadow-sm">
+            <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('contacts', page=page-1, q=search_query, category=category_filter, favorite=favorite_filter, sort=sort_by) }}">
+                    <i class="bi bi-chevron-left"></i> Previous
+                </a>
+            </li>
+
+            {% for p in range(1, total_pages + 1) %}
+            <li class="page-item {% if p == page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('contacts', page=p, q=search_query, category=category_filter, favorite=favorite_filter, sort=sort_by) }}">
+                    {{ p }}
+                </a>
+            </li>
+            {% endfor %}
+
+            <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+                <a class="page-link" href="{{ url_for('contacts', page=page+1, q=search_query, category=category_filter, favorite=favorite_filter, sort=sort_by) }}">
+                    Next <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="card p-5 text-center bg-white">
+        <div class="mb-3 text-muted">
+            <i class="bi bi-person-x fs-1"></i>
+        </div>
+        <h4 class="fw-bold text-navy">No Contacts Found</h4>
+        <p class="text-muted small mb-3">
+            {% if search_query or category_filter or favorite_filter %}
+                No contacts match your active filter criteria. Try resetting your search or filter.
+            {% else %}
+                Your contact list is currently empty. Start building your address book now!
+            {% endif %}
+        </p>
+        <div class="d-flex justify-content-center gap-2">
+            {% if search_query or category_filter or favorite_filter %}
+                <a href="{{ url_for('contacts') }}" class="btn btn-outline-secondary btn-sm">Clear All Filters</a>
+            {% endif %}
+            <a href="{{ url_for('add_contact') }}" class="btn btn-teal btn-sm">Add New Contact</a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

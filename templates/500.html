@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}500 - Internal Server Error — ContactHub{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-5 border-0 shadow-sm rounded-4 bg-white">
+                <div class="display-1 text-danger fw-extrabold mb-3">500</div>
+                <h3 class="fw-bold text-navy mb-2">Unexpected Server Error</h3>
+                <p class="text-muted small mb-4">
+                    An internal error occurred while processing your request. The issue has been recorded and sensitive system paths are shielded for your security.
+                </p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="{{ url_for('dashboard') if current_user else url_for('index') }}" class="btn btn-teal shadow-sm">
+                        <i class="bi bi-arrow-repeat me-1"></i> Return to Dashboard
+                    </a>
+                    <a href="{{ url_for('health') }}" target="_blank" class="btn btn-outline-secondary">
+                        <i class="bi bi-heart-pulse text-danger me-1"></i> Check Health Status
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block public_content %}
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card p-5 border-0 shadow-sm rounded-4 bg-white">
+                <div class="display-1 text-danger fw-extrabold mb-3">500</div>
+                <h3 class="fw-bold text-navy mb-2">Unexpected Server Error</h3>
+                <p class="text-muted small mb-4">
+                    Our server encountered a temporary glitch. Please try again shortly.
+                </p>
+                <a href="{{ url_for('index') }}" class="btn btn-teal shadow-sm">
+                    <i class="bi bi-house-door-fill me-1"></i> Return Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

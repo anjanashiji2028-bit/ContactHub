@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Export Contacts — ContactHub{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-navy mb-0">Export Contacts</h2>
+            <p class="text-muted small mb-0">Download a secure backup copy of your contact directory in CSV format</p>
+        </div>
+        <a href="{{ url_for('contacts') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i> Back to Contacts
+        </a>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card p-4 p-md-5 bg-white shadow-sm border-0 rounded-4">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex p-3 rounded-circle bg-teal-subtle text-teal mb-3">
+                        <i class="bi bi-file-earmark-spreadsheet-fill fs-1"></i>
+                    </div>
+                    <h3 class="fw-bold text-navy">Export to CSV</h3>
+                    <p class="text-muted small">
+                        You currently have <strong>{{ total_contacts }}</strong> contacts stored under your private account.
+                    </p>
+                </div>
+
+                <form method="POST" action="{{ url_for('download_csv') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <div class="mb-4">
+                        <label for="category" class="form-label fw-semibold text-navy small">Select Categories to Export</label>
+                        <select class="form-select form-select-lg" id="category" name="category">
+                            <option value="all" selected>All Categories (Full Directory Backup)</option>
+                            <option value="Personal">Personal Contacts Only</option>
+                            <option value="Work">Work / Professional Contacts Only</option>
+                            <option value="Family">Family Contacts Only</option>
+                            <option value="Friends">Friends Only</option>
+                            <option value="Other">Other Contacts Only</option>
+                        </select>
+                    </div>
+
+                    <!-- Security & Isolation Assurance -->
+                    <div class="p-3 bg-light rounded-3 border mb-4">
+                        <div class="d-flex align-items-center gap-2 fw-semibold text-secondary small mb-1">
+                            <i class="bi bi-shield-lock-fill text-success"></i> Strict Data Isolation Guarantee
+                        </div>
+                        <p class="text-muted very-small mb-0">
+                            The export generator filters exclusively by your authenticated session ID (<code>user_id = {{ current_user.id }}</code>). No other user's records can ever be accessed or downloaded.
+                        </p>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-teal btn-lg shadow-sm" {% if total_contacts == 0 %}disabled{% endif %}>
+                            <i class="bi bi-cloud-arrow-down-fill me-2"></i> Download Contacts CSV
+                        </button>
+                    </div>
+
+                    {% if total_contacts == 0 %}
+                    <div class="text-center text-muted very-small mt-2">
+                        You have no contacts to export. Add contacts before downloading.
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

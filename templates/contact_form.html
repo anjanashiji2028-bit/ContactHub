@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if action == 'edit' %}Edit Contact: {{ contact.full_name }}{% else %}Add New Contact{% endif %} — ContactHub
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Breadcrumb -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold text-navy mb-0">
+                {% if action == 'edit' %}Edit Contact{% else %}Add New Contact{% endif %}
+            </h2>
+            <p class="text-muted small mb-0">
+                {% if action == 'edit' %}Update information for {{ contact.full_name }}{% else %}Store a new contact entry into your private address book{% endif %}
+            </p>
+        </div>
+        <a href="{% if action == 'edit' %}{{ url_for('contact_detail', contact_id=contact_id) }}{% else %}{{ url_for('contacts') }}{% endif %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-x-lg me-1"></i> Cancel
+        </a>
+    </div>
+
+    <!-- Form Card -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card p-4 p-md-5 bg-white shadow-sm border-0 rounded-4">
+                <form method="POST" action="{% if action == 'edit' %}{{ url_for('edit_contact', contact_id=contact_id) }}{% else %}{{ url_for('add_contact') }}{% endif %}" novalidate>
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                    <!-- Basic Personal Information Section -->
+                    <h5 class="fw-bold text-navy border-bottom pb-2 mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge text-teal"></i> Primary Identity
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="full_name" class="form-label fw-semibold small">Full Name <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-person text-muted"></i></span>
+                                <input type="text" class="form-control" id="full_name" name="full_name" value="{{ contact.full_name or '' }}" placeholder="e.g. Maya Sharma" required>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="category" class="form-label fw-semibold small">Category <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-tag text-muted"></i></span>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="Personal" {% if contact.category == 'Personal' %}selected{% endif %}>Personal</option>
+                                    <option value="Work" {% if contact.category == 'Work' or not contact.category %}selected{% endif %}>Work</option>
+                                    <option value="Family" {% if contact.category == 'Family' %}selected{% endif %}>Family</option>
+                                    <option value="Friends" {% if contact.category == 'Friends' %}selected{% endif %}>Friends</option>
+                                    <option value="Other" {% if contact.category == 'Other' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Contact Numbers and Email Section -->
+                    <h5 class="fw-bold text-navy border-bottom pb-2 mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-telephone text-teal"></i> Communication Channels
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label fw-semibold small">Primary Phone <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-telephone-fill text-muted"></i></span>
+                                <input type="tel" class="form-control" id="phone" name="phone" value="{{ contact.phone or '' }}" placeholder="+91 98765 43210" required>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="secondary_phone" class="form-label fw-semibold small">Secondary Phone <span class="text-muted">(Optional)</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-telephone text-muted"></i></span>
+                                <input type="tel" class="form-control" id="secondary_phone" name="secondary_phone" value="{{ contact.secondary_phone or '' }}" placeholder="Office landline or alternate number">
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <label for="email" class="form-label fw-semibold small">Email Address <span class="text-muted">(Optional)</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light"><i class="bi bi-envelope text-muted"></i></span>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ contact.email or '' }}" placeholder="contact@example.com">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Professional / Organization Section -->
+                    <h5 class="fw-bold text-navy border-bottom pb-2 mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-building text-teal"></i> Organization &amp; Job Title
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="company" class="form-label fw-semibold small">Company / Organization <span class="text-muted">(Optional)</span></label>
+                            <input type="text" class="form-control" id="company" name="company" value="{{ contact.company or '' }}" placeholder="e.g. Infosys, Wipro, College, etc.">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="job_title" class="form-label fw-semibold small">Job Title / Designation <span class="text-muted">(Optional)</span></label>
+                            <input type="text" class="form-control" id="job_title" name="job_title" value="{{ contact.job_title or '' }}" placeholder="e.g. Systems Engineer, Professor">
+                        </div>
+                    </div>
+
+                    <!-- Address & Location Section -->
+                    <h5 class="fw-bold text-navy border-bottom pb-2 mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-geo-alt text-teal"></i> Location &amp; Address
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <label for="address" class="form-label fw-semibold small">Street Address <span class="text-muted">(Optional)</span></label>
+                            <input type="text" class="form-control" id="address" name="address" value="{{ contact.address or '' }}" placeholder="Flat/House number, street, locality">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label for="city" class="form-label fw-semibold small">City <span class="text-muted">(Optional)</span></label>
+                            <input type="text" class="form-control" id="city" name="city" value="{{ contact.city or '' }}" placeholder="e.g. Kochi, Bengaluru, Mumbai">
+                        </div>
+                    </div>
+
+                    <!-- Notes & Favorite Status -->
+                    <h5 class="fw-bold text-navy border-bottom pb-2 mb-4 d-flex align-items-center gap-2">
+                        <i class="bi bi-journal-text text-teal"></i> Additional Details
+                    </h5>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label fw-semibold small">Private Notes <span class="text-muted">(Optional)</span></label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Add helpful notes, meeting context, or reminders...">{{ contact.notes or '' }}</textarea>
+                    </div>
+
+                    <div class="form-check form-switch mb-4">
+                        <input class="form-check-input" type="checkbox" role="switch" id="is_favorite" name="is_favorite" value="1" {% if contact.is_favorite == 1 or contact.is_favorite == '1' %}checked{% endif %}>
+                        <label class="form-check-label fw-semibold small text-navy" for="is_favorite">
+                            <i class="bi bi-star-fill text-warning me-1"></i> Mark as Favorite Contact (Pin to VIP Dashboard)
+                        </label>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="d-flex justify-content-end gap-2 border-top pt-4">
+                        <a href="{% if action == 'edit' %}{{ url_for('contact_detail', contact_id=contact_id) }}{% else %}{{ url_for('contacts') }}{% endif %}" class="btn btn-light">
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-teal px-4 shadow-sm">
+                            <i class="bi bi-check-lg me-1"></i>
+                            {% if action == 'edit' %}Save Changes{% else %}Save Contact{% endif %}
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

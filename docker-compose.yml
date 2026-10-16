@@ -1,0 +1,28 @@
+services:
+  contacthub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: contacthub:v1.0
+    container_name: contacthub-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - SECRET_KEY=contacthub-production-secure-key-sample-2026
+      - DATABASE_PATH=/app/database/contacthub.db
+      - FLASK_DEBUG=False
+      - PORT=5000
+    volumes:
+      # Named volume guarantees SQLite data persistence across container updates
+      - contacthub-data:/app/database
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  contacthub-data:
+    driver: local

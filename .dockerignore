@@ -1,0 +1,38 @@
+# Git
+.git
+.gitignore
+
+# Python cache & virtual environment
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+env/
+
+# Environment files and secrets
+.env
+.env.*
+kubernetes/secret.yaml
+
+# Testing & Coverage
+.pytest_cache/
+tests/
+.coverage
+htmlcov/
+
+# Documentation and scripts not needed in runtime image
+docs/
+scripts/
+
+# Local databases
+database/*.db
+database/*.sqlite3
+database/*.db-journal
+
+# IDEs and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

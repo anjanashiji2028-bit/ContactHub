@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: contacthub-deployment
+  namespace: contacthub
+  labels:
+    app: contacthub
+    tier: web
+spec:
+  # NOTE ON SQLITE AND REPLICAS:
+  # SQLite is a file-based embedded database. For a single replica on a local laptop
+  # or persistent volume, one pod operates safely.
+  # When scaling beyond 1 replica, a shared network database (such as PostgreSQL or MySQL)
+  # is recommended to guarantee data consistency across pods.
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: contacthub
+  template:
+    metadata:
+      labels:
+        app: contacthub
+        tier: web
+    spec:
+      containers:
+        - name: contacthub
+          image: contacthub:v1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: contacthub-config
+            - secretRef:
+                name: contacthub-secret
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 2
+          volumeMounts:
+            - name: database-storage
+              mountPath: /app/database
+      volumes:
+        - name: database-storage
+          persistentVolumeClaim:
+            claimName: contacthub-pvc
